@@ -22,4 +22,14 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+router.post("/addShoes", async (req, res, next) => {
+  try {
+
+    const createdShoes = await Shoes.create(req.body);
+    res.status(201).json(createdShoes);
+  } catch (error) {
+    console.error(error);
+  }
+});
+
 module.exports = router;
