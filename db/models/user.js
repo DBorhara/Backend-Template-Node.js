@@ -41,6 +41,10 @@ User.init(
       // For OAuth purposes
       type: DataTypes.STRING,
     },
+    isAdmin: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+    },
   },
   {
     sequelize: db,

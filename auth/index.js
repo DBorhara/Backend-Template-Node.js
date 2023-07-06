@@ -14,6 +14,7 @@ router.post("/login", async (req, res, next) => {
       req.login(user, (err) => (err ? next(err) : res.status(200).json(user)));
     }
   } catch (error) {
+    console.error(error);
     next(error);
   }
 });
@@ -40,17 +41,22 @@ router.post("/signup", async (req, res, next) => {
 // auth/logout
 router.post("/logout", (req, res, next) => {
   // Passport js method on the request
+
   req.logout((error) => {
     if (error) {
       return next(error);
     }
     res.redirect("/");
   });
+  req.session.destroy();
 });
 
 // auth/me
 router.get("/me", (req, res, next) => {
   res.status(200).json(req.user);
 });
+
+//auth/google
+router.use("/google", require("./google"));
 
 module.exports = router;

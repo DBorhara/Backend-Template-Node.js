@@ -24,14 +24,23 @@ const configSession = () => ({
   store: sessionStore,
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 8 * 60 * 60 * 1000 }, // 8 hours
+  cookie: {
+    maxAge: 2 * 60 * 60 * 1000,
+  }, // 8 hours
+  httpOnly: true,
 });
 
 // Middleware setup
 const setupMiddleware = (app) => {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
-  app.use(cors());
+  app.use(
+    cors({
+      origin: "http://localhost:3000", // allow to server to accept request from different origin
+      methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+      credentials: true,
+    })
+  );
   app.use(session(configSession()));
   app.use(passport.initialize());
   app.use(passport.session());
