@@ -9,6 +9,7 @@ const db = new Sequelize(
   "postgres://dborhara:FYR065wSqSIJNzNbOTJoyEcRWdZQ7tSh@dpg-cijhg7p8g3nc2g8ki9f0-a.ohio-postgres.render.com/ttpbackend",
   {
     logging: false,
+    ssl: false,
   }
 );
 
