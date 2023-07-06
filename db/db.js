@@ -1,12 +1,29 @@
 const { Sequelize } = require("sequelize");
 const { name } = require("../package.json");
-require("dotenv").config();
+require("pg");
+const dotenv = require("dotenv");
+dotenv.config();
 // name === ttpbackend2023
 
+// const db = new Sequelize(
+//   "postgres://dborhara:FYR065wSqSIJNzNbOTJoyEcRWdZQ7tSh@dpg-cijhg7p8g3nc2g8ki9f0-a.ohio-postgres.render.com/ttpbackend",
+//   {
+//     logging: false,
+//   }
+// );
+
 const db = new Sequelize(
-  process.env.DATABASE_URL || `postgres://localhost:5432/${name}`,
+  "ttpbackend",
+  "dborhara",
+  "FYR065wSqSIJNzNbOTJoyEcRWdZQ7tSh",
   {
-    logging: false,
+    host:
+      "dpg-cijhg7p8g3nc2g8ki9f0-a.ohio-postgres.render.com" ||
+      "FYR065wSqSIJNzNbOTJoyEcRWdZQ7tSh",
+    dialect: "postgres",
+    dialectOptions: {
+      
+    },
   }
 );
 
