@@ -5,6 +5,8 @@ const passport = require("passport");
 const cors = require("cors");
 const db = require("./db");
 
+require("dotenv").config();
+
 const sessionStore = new SequelizeStore({ db });
 
 //Helper functions
