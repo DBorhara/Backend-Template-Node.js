@@ -7,9 +7,6 @@ const dotenv = require("dotenv").config().parsed;
 
 const db = new Sequelize(dotenv.DATABASE_URL, {
   logging: false,
-  dialectOptions: {
-    ssl: true,
-  },
 });
 
 // const db = new Sequelize(

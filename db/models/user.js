@@ -1,4 +1,4 @@
-const crypto = require("crypto");
+const crypto = require("node:crypto");
 const { Model, DataTypes } = require("sequelize");
 const db = require("../db");
 
@@ -19,7 +19,7 @@ class User extends Model {
 
   // instance method to check pw
   async correctPassword(pwAttempt) {
-    return User.encryptPassword(pwAttempt, this.salt) === this.password;
+    return (await User.encryptPassword(pwAttempt, this.salt)) === this.password;
   }
 }
 
