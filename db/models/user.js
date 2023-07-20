@@ -1,84 +1,90 @@
-const crypto = require("node:crypto");
+const crypto = require("crypto");
 const { Model, DataTypes } = require("sequelize");
 const db = require("../db");
 
 class User extends Model {
+  // Generate a random salt
   static async generateSalt() {
+    // Use Node.js crypto module to generate a random salt
     return crypto.randomBytes(16).toString("base64");
   }
 
-  static async encryptPassword(pw, salt) {
+  // Encrypt password
+  static async encryptPassword(password, salt) {
+    // Use Node.js crypto module to create a hash (SHA-256) from password and salt
     return crypto
       .createHash("RSA-SHA256")
-      .update(pw)
+      .update(password)
       .update(salt)
       .digest("hex");
   }
-  // 1e38b6a36f6e3ac36e63f64892f2e1cf4291e7e3666902c9b97dc5af01546c06
-  // Salt aUYqF5jlAZVseb9gxB8e9Q==
 
-  // instance method to check pw
-  async correctPassword(pwAttempt) {
-    return (await User.encryptPassword(pwAttempt, this.salt)) === this.password;
+  // Instance method to verify a user's password
+  async correctPassword(candidatePassword) {
+    // Check if the hashed candidate password is the same as the stored password
+    return (
+      (await User.encryptPassword(candidatePassword, this.salt)) ===
+      this.password
+    );
   }
 }
 
 // Define user model
 User.init(
   {
+    // User email
     email: {
       type: DataTypes.STRING,
       unique: true,
       allowNull: false,
     },
+    // User password
     password: {
       type: DataTypes.STRING,
     },
+    // Salt for password
     salt: {
       type: DataTypes.STRING,
     },
+    // User Google ID (for OAuth)
     googleId: {
-      // For OAuth purposes
       type: DataTypes.STRING,
     },
+    // Flag to denote if user is an admin
     isAdmin: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
     },
   },
   {
-    sequelize: db,
-    modelName: "User",
+    sequelize: db, // The DB connection instance
+    modelName: "User", // The name of our model
     hooks: {
-      //Single
+      // Single user save
       beforeSave: async (user) => {
         if (user.changed("password")) {
+          // If the password field has changed, generate a new salt
           user.salt = await User.generateSalt();
+          // And encrypt the password
           user.password = await User.encryptPassword(user.password, user.salt);
         }
       },
-      // Many created
+      // Bulk user creation
       beforeBulkCreate: async (users) => {
-        users.forEach(async (user) => {
+        for (let user of users) {
           if (user.changed("password")) {
+            // If the password field has changed, generate a new salt
             user.salt = await User.generateSalt();
+            // And encrypt the password
             user.password = await User.encryptPassword(
               user.password,
               user.salt
             );
           }
-        });
+        }
       },
     },
   }
 );
 
 module.exports = User;
-
-/* [{
-    email:test@test.com, 
-    password:123 >> 1e38b6a36f6e3ac36e63f64892f2e1cf4291e7e3666902c9b97dc5af01546c06, 
-    salt: aUYqF5jlAZVseb9gxB8e9Q==, 
-    googleId:81he2i12nin}]*/
-
-// user PW(new or changed) >> Hashed(RSA-SHA256) >> New Salt Generated(unique) >> New Salt Applied to Hashed PW >> Unique Encrypted PW

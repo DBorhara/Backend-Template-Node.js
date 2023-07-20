@@ -1,3 +1,5 @@
+"use strict";
+
 const db = require("./db");
 const { User } = require("./db/models");
 
@@ -12,7 +14,15 @@ const seedUsers = [
 ];
 
 const seed = async () => {
-  await User.bulkCreate(seedUsers);
+  try {
+    // await db.sync({ force: true }); // Clear database
+    await User.bulkCreate(seedUsers);
+    console.log("Seeding successful!");
+    process.exit(0); // Exit process with success status
+  } catch (error) {
+    console.error("Seeding failed: ", error);
+    process.exit(1); // Exit process with failure status
+  }
 };
 
-seed().then(() => process.exit());
+seed(); // Call the async function to seed the database

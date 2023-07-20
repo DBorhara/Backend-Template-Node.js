@@ -1,69 +1,80 @@
+// Import the necessary modules
 const router = require("express").Router();
 const { User } = require("../db/models");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 
+// Passport local strategy configuration
 passport.use(
   "local",
   new LocalStrategy(
     {
+      // Define the fields that will be used for authentication
       usernameField: "email",
-
       passwordField: "password",
     },
     async (username, password, done) => {
       try {
+        // Find a user in the database with the given email (username)
         const user = await User.findOne({ where: { email: username } });
+
+        // If the user isn't found, return an error message
         if (!user) {
           return done(null, false, { message: "Incorrect email" });
         }
+        // If the user's password isn't correct, return an error message
         if (!user.correctPassword(password)) {
           return done(null, false, { message: "Incorrect password" });
         }
+        // If both checks pass, return the user object
         return done(null, user);
       } catch (error) {
-        console.log("USER AUTH ERROR", error);
+        // If an error occurred, pass it to the done callback
+        done(error);
       }
     }
   )
 );
 
-// Mounted on /auth
-
-// auth/signup
+// Sign up route
 router.post("/signup", async (req, res, next) => {
   try {
-    console.log(req.body);
+    // Destructure the email and password from the request body
     const { email, password } = req.body;
+
+    // If either field is missing, return an error
     if (!email || !password) {
-      return res.status(400).send("Required fields missing");
+      return res.status(400).json({ error: "Required fields missing" });
     }
+
+    // Create a new user in the database with the request body
     const user = await User.create(req.body);
-    // Passport js method on request
+
+    // Log in the new user with Passport
     req.login(user, (err) =>
       err
         ? next(err)
-        : res
-            .status(200)
-            .json({ email: user.email, id: user.id, isAdmin: user.isAdmin })
+        : res.json({ email: user.email, id: user.id, isAdmin: user.isAdmin })
     );
   } catch (error) {
+    // If a SequelizeUniqueConstraintError occurred, a user with the given
+    // email already exists in the database
     if (error.name === "SequelizeUniqueConstraintError") {
-      res.status(409).send("User already exists");
+      res.status(409).json({ error: "User already exists" });
     } else {
+      // If a different error occurred, pass it to the next middleware
       next(error);
     }
   }
 });
 
+// Login route
 router.post(
   "/login",
-  passport.authenticate("local"),
-  function (req, res, next) {
-    console.log("req.user", req.user.email);
-    // If this function gets called, authentication was successful.
-    // `req.user` contains the authenticated user.
-    res.status(200).json({
+  passport.authenticate("local"), // Use Passport's local strategy for authentication
+  (req, res, next) => {
+    // If authentication was successful, respond with the user's information
+    res.json({
       email: req.user.email,
       id: req.user.id,
       isAdmin: req.user.isAdmin,
@@ -71,36 +82,40 @@ router.post(
   }
 );
 
-// auth/logout
+// Logout route
 router.post("/logout", (req, res, next) => {
-  // Passport js method on the request
-  console.log(`LOG OUT HIT`);
+  // Log out the user with Passport
   req.logout((error) => {
     if (error) {
+      // If an error occurred, pass it to the next middleware
       return next(error);
     }
-    // res.redirect("");
-    res.send("LOGGED OUT");
+    // If logging out was successful, respond with a success message
+    res.json({ message: "LOGGED OUT" });
   });
 });
 
-// auth/me
+// Route to get the current user's information
 router.get("/me", (req, res, next) => {
   try {
+    // If the user isn't logged in, respond with an error
     if (!req.user) {
-      return
+      return res.status(401).json({ error: "Unauthorized" });
     }
-    res.status(200).json({
+    // If the user is logged in, respond with their information
+    res.json({
       id: req.user.id,
       email: req.user.email,
       isAdmin: req.user.isAdmin,
     });
   } catch (error) {
-    console.error(error);
+    // If an error occurred, pass it to the next middleware
+    next(error);
   }
 });
 
-//auth/google
+// Mount the Google authentication routes at /auth/google
 router.use("/google", require("./google"));
 
+// Export the router to be used in other files
 module.exports = router;
