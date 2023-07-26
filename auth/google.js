@@ -60,6 +60,7 @@ router.get(
   "/callback",
   passport.authenticate("google", {
     // If authentication fails, redirect to login page
+    scope: ["profile", "email"],
     failureRedirect: process.env.FAILURE_REDIRECT_URL,
   }),
   // This middleware will be executed after successful authentication
